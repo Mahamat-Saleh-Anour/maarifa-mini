@@ -17,6 +17,13 @@ Gestion scolaire simple et multi-établissement : élèves, familles et tuteurs,
 
 Un même compte peut travailler pour plusieurs écoles et choisit l'école en haut de l'écran.
 
+## Interface
+
+- **Tableau de bord** : encaissements du mois et du jour, reste à recouvrer, taux de recouvrement, graphiques (attendu / encaissé par mois, 30 derniers jours, reste par classe), familles les plus en retard, derniers reçus. Graphiques : [Chart.js](https://www.chartjs.org/) 4.4.4 chargé depuis jsDelivr.
+- **Adaptée à tous les écrans** : barre latérale fixe sur ordinateur, menu tiroir sur tablette et téléphone, listes affichées en cartes et fenêtres en volet bas sur téléphone.
+- **Thème clair, sombre ou automatique** (menu du compte).
+- **Mon compte** : profil, établissements et rôles ; le changement de mot de passe s'ouvre dans une fenêtre séparée et demande le mot de passe actuel.
+
 ## Structure
 
 ```
