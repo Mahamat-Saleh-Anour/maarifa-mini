@@ -17,6 +17,22 @@ Gestion scolaire simple et multi-établissement : élèves, familles et tuteurs,
 
 Un même compte peut travailler pour plusieurs écoles et choisit l'école en haut de l'écran.
 
+## Nouveautés de la version 2
+
+- **Années scolaires** : chaque année a ses classes, ses mensualités, ses frais d'inscription et ses mois. On choisit l'année dans la barre latérale ; les anciennes années restent consultables avec leurs impayés.
+- **Frais d'inscription** : fixés par classe et par année, payables en une ou plusieurs fois, sur le même reçu que les mensualités. Réduction ou exonération possible par élève.
+- **Abandons** : un élève qui part en cours d'année est déclaré avec sa date et son motif. Les mois suivants ne sont plus dus ; ce qu'il devait avant reste à recouvrer.
+- **Réinscription** : à la rentrée, les élèves actifs de l'année précédente sont réinscrits en un clic, avec la classe suivante proposée.
+- **Rapports annuels** : chiffre d'affaires par année (inscriptions et mensualités), attendu, reste à recouvrer, taux, abandons et manque à gagner, détail par mois et par classe.
+
+### Mettre à jour une installation de la version 1
+
+1. Dans Supabase, ouvrez **SQL Editor > New query**, collez tout le nouveau `supabase/schema.sql` et cliquez sur **Run**. Le script convertit les données existantes : une année scolaire par établissement (reprise de ses classes et de ses mois), une inscription par élève, et tous les reçus rattachés à cette année. Il peut être relancé sans risque.
+2. Vercel redéploie l'application automatiquement après le push sur GitHub.
+3. Dans l'application, ouvrez **Paramètres > Classes et frais** et saisissez les frais d'inscription de chaque classe (0 par défaut).
+
+La fonction `manage-users` n'a pas changé : inutile de la redéployer.
+
 ## Interface
 
 - **Tableau de bord** : encaissements du mois et du jour, reste à recouvrer, taux de recouvrement, graphiques (attendu / encaissé par mois, 30 derniers jours, reste par classe), familles les plus en retard, derniers reçus. Graphiques : [Chart.js](https://www.chartjs.org/) 4.4.4 chargé depuis jsDelivr.
@@ -30,7 +46,7 @@ Un même compte peut travailler pour plusieurs écoles et choisit l'école en ha
 index.html, styles.css, app.js   l'application (aucune compilation nécessaire)
 config.js                        adresse et clé publique de votre projet Supabase
 vercel.json                      en-têtes de sécurité du site
-supabase/schema.sql              tables, règles d'accès, fonctions de paiement, audit
+supabase/schema.sql              tables, règles d'accès, fonctions de paiement, audit (v2, relançable)
 supabase/seed_cszi.sql           données initiales du CSZI (fiche papier 2025-2026)
 supabase/functions/manage-users  gestion des écoles et des comptes (Edge Function)
 .github/workflows/keepalive.yml  (optionnel) évite la mise en pause du projet gratuit
