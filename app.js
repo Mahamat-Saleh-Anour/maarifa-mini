@@ -549,18 +549,18 @@ function viewTableau() {
       const ab = st.statut === "Abandon" ? ` · <span style="color:var(--late)">Abandon ${fmtDate(st.dateSortie)}</span>` : "";
       rows += `<tr><td class="stick"><button class="st-name" data-act="edit-student" data-id="${st.id}">${esc(st.nom)}</button><div class="meta">${esc(clsOf(st)?.name || "Sans classe")}${st.reduction ? " · réd. " + F(st.reduction) : ""}${ab}</div></td><td class="num">${F(monthly(st))}</td>`;
       const ic = cellState(r.insDue, r.insPaid, "0000-00");
-      rows += `<td><button class="cell ${ic}" ${ic === "na" || ic === "ok" ? "disabled" : ""} data-act="pay" data-fam="${fam.id}" data-st="${st.id}" data-m="INS" title="${esc(st.nom)} · inscription">${ic === "na" ? "—" : ic === "ok" ? F(r.insPaid) : ic === "part" ? `${F(r.insPaid)}<small>sur ${F(r.insDue)}</small>` : `0<small>dû ${F(r.insDue)}</small>`}</button></td>`;
+      rows += `<td><button class="cell ${ic}" ${ic === "na" ? "disabled" : ""} data-act="${r.insPaid > 0 ? "cell" : "pay"}" data-fam="${fam.id}" data-st="${st.id}" data-m="INS" title="${esc(st.nom)} · inscription">${ic === "na" ? "—" : ic === "ok" ? F(r.insPaid) : ic === "part" ? `${F(r.insPaid)}<small>sur ${F(r.insDue)}</small>` : `0<small>dû ${F(r.insDue)}</small>`}</button></td>`;
       for (const m of ms) {
         const d = dueFor(st, m.key), p = PI.get(st.id + "|" + m.key) || 0, c = cellState(d, p, m.key);
         const txt = c === "na" ? "—" : c === "ok" ? F(p) : c === "part" ? `${F(p)}<small>sur ${F(d)}</small>` : c === "late" ? `0<small>dû ${F(d)}</small>` : F(d);
-        rows += `<td><button class="cell ${c}" ${c === "na" || c === "ok" ? "disabled" : ""} data-act="pay" data-fam="${fam.id}" data-st="${st.id}" data-m="${m.key}" title="${esc(st.nom)} · ${esc(m.label || mLabel(m.key))}">${txt}</button></td>`;
+        rows += `<td><button class="cell ${c}" ${c === "na" && !p ? "disabled" : ""} data-act="${p > 0 ? "cell" : "pay"}" data-fam="${fam.id}" data-st="${st.id}" data-m="${m.key}" title="${esc(st.nom)} · ${esc(m.label || mLabel(m.key))}">${txt}</button></td>`;
       }
       rows += `<td class="num">${F(r.paid)}</td><td class="num" style="color:${r.reste > 0 ? "var(--late)" : "var(--ok)"};font-weight:600">${F(r.reste)}</td></tr>`;
     }
   }
   const head = `<tr><th class="stick">Famille / élève</th><th class="num">Mensualité</th><th style="text-align:center">Inscription</th>${ms.map((m) => `<th style="text-align:center">${esc(m.label || mLabel(m.key))}</th>`).join("")}<th class="num">Total payé</th><th class="num">Reste échu</th></tr>`;
   const foot = `<tr><td class="stick">Encaissé</td><td></td><td class="num">${F(insPaidTot)}</td>${ms.map((m) => `<td class="num">${F(colPaid[m.key] || 0)}</td>`).join("")}<td class="num">${F(insPaidTot + Object.values(colPaid).reduce((a, b) => a + b, 0))}</td><td></td></tr>`;
-  return `${pageHead("Registre des paiements", `Année ${esc(year().label)} : chaque famille et ses enfants, l'inscription puis chaque mois. Touchez une case pour encaisser.`, `<button class="btn" data-act="export-tableau">${icon("download")}Exporter</button><button class="btn primary" data-act="new-family">${icon("plus")}Nouvelle famille</button>`)}
+  return `${pageHead("Registre des paiements", `Année ${esc(year().label)} : chaque famille et ses enfants, l'inscription puis chaque mois. Touchez une case vide pour encaisser, ou une case payée pour voir ou corriger le reçu.`, `<button class="btn" data-act="export-tableau">${icon("download")}Exporter</button><button class="btn primary" data-act="new-family">${icon("plus")}Nouvelle famille</button>`)}
   <div class="toolbar">
     <div class="search">${icon("search")}<input id="f-q" data-f="q" placeholder="Famille, élève, tuteur, téléphone…" value="${esc(f.q)}" aria-label="Rechercher"></div>
     <select id="f-cls" data-f="cls" aria-label="Classe"><option value="">Toutes les classes</option>${classes().map((c) => `<option value="${esc(c.id)}"${f.cls === c.id ? " selected" : ""}>${esc(c.name)}</option>`).join("")}</select>
@@ -644,7 +644,7 @@ function viewJournal() {
     <td data-label="Détail">${esc(names.join(", "))}<span class="sub">${esc(ms.join(", "))}</span></td><td data-label="Mode">${esc(r.mode)}</td>
     <td data-label="Encaissé par">${esc(r.created_by_name)}<span class="sub">${fmtDateTime(r.created_at)}</span></td>
     <td data-label="Montant" class="num"><b class="amt">${F(r.total)}</b></td>
-    <td class="actions-cell" data-label=""><div class="row"><button class="btn sm" data-act="receipt" data-id="${r.id}">Voir</button>${r.status === "valide" ? `<button class="btn sm outline-danger" data-act="cancel-receipt" data-id="${r.id}">Annuler</button>` : ""}</div></td></tr>`;
+    <td class="actions-cell" data-label=""><div class="row"><button class="btn sm" data-act="receipt" data-id="${r.id}">Voir</button>${r.status === "valide" ? `<button class="btn sm" data-act="fix-receipt" data-id="${r.id}">Corriger</button><button class="btn sm outline-danger" data-act="cancel-receipt" data-id="${r.id}">Annuler</button>` : ""}</div></td></tr>`;
   }).join("");
   return `${pageHead("Reçus", `Encaissements de l'année ${esc(year().label)}, avec le nom de la personne qui a encaissé.`, `<button class="btn" data-act="export-journal">${icon("download")}Exporter</button><button class="btn primary" data-act="pay">${icon("plus")}Encaisser</button>`)}
   <div class="kpis"><div class="card kpi ok"><div class="k-top"><span class="k-lbl">Encaissé (sélection)</span><span class="k-ico">${icon("wallet")}</span></div><div class="k-val">${F(total)}<small>FCFA</small></div><div class="k-sub">${valid.length} reçu${valid.length > 1 ? "s" : ""} valide${valid.length > 1 ? "s" : ""}</div></div>
@@ -927,7 +927,7 @@ function openPay(famId, stId, mk) {
       <div class="field"><label for="p-payer">Versé par</label><input id="p-payer" name="payer" value="${esc(fam?.tuteurNom || "")}"></div>
       <div class="field full"><label for="p-note">Note</label><input id="p-note" name="note" placeholder="ex. référence de la transaction Mobile Money"></div>
     </div><div id="pay-grid"></div>`,
-    foot: `<button type="button" class="btn" data-act="close">Annuler</button><button class="btn primary" type="submit">${icon("check")}Enregistrer le paiement</button>` }));
+    foot: `<button type="button" class="btn" data-act="close">Fermer</button><button class="btn primary" type="submit">${icon("check")}Enregistrer le paiement</button>` }));
   renderPayGrid();
 }
 function renderPayGrid() {
@@ -941,7 +941,7 @@ function renderPayGrid() {
   const cell = (st, key, d, p, past) => {
     const r = Math.max(0, d - p); if (past) resteTot += r;
     if (d <= 0) return '<td class="meta" style="text-align:center">—</td>';
-    if (r <= 0) return '<td style="text-align:center"><span class="pill ok">Payé</span></td>';
+    if (r <= 0) return `<td style="text-align:center"><span class="pill ok">Payé</span></td>`;
     return `<td><input type="number" inputmode="numeric" min="0" max="${r}" step="500" id="pv-${st.id}-${key}" data-pv="${st.id}|${key}" value="${P.vals[st.id + "|" + key] || ""}" placeholder="0" aria-label="${esc(st.nom)} ${key === "INS" ? "inscription" : esc(mLabel(key))}"><div class="due">reste ${F(r)}</div></td>`;
   };
   const rows = sts.map((st) => `<tr><td class="stick"><b>${esc(st.nom)}</b><div class="meta">${esc(clsOf(st)?.name || "")} · ${F(monthly(st))}/mois${st.statut === "Abandon" ? " · abandon" : ""}</div></td>${cell(st, "INS", dueIns(st), PI.get(st.id + "|INS") || 0, true)}${ms.map((m) => cell(st, m.key, dueFor(st, m.key), PI.get(st.id + "|" + m.key) || 0, m.key <= nowKey())).join("")}</tr>`).join("");
@@ -990,22 +990,49 @@ function openReceipt(id) {
     ${r.note ? `<p class="meta" style="margin:0">Note : ${esc(r.note)}</p>` : ""}
     ${r.status === "annule" ? `<div class="banner late">${icon("ban")}<span>Annulé le ${fmtDateTime(r.cancelled_at)} par ${esc(r.cancelled_by_name)}. Motif : ${esc(r.cancel_reason)}</span></div>` : ""}
     <div class="sig"><span>Signature du parent</span><span>Cachet et signature de la caisse</span></div>`,
-    foot: `${r.status === "valide" ? `<button class="btn outline-danger left" data-act="cancel-receipt" data-id="${r.id}">Annuler ce reçu</button>` : ""}<button class="btn" data-act="print">${icon("printer")}Imprimer</button><button class="btn primary" data-act="close">Fermer</button>` }));
+    foot: `${r.status === "valide" ? `<button class="btn outline-danger left" data-act="cancel-receipt" data-id="${r.id}">Annuler</button><button class="btn" data-act="fix-receipt" data-id="${r.id}">Corriger</button>` : ""}<button class="btn" data-act="print">${icon("printer")}Imprimer</button><button class="btn primary" data-act="close">Fermer</button>` }));
 }
-function openCancel(id) {
+function openCancel(id, fix = false) {
   const r = S.receipts.find((x) => x.id === id); if (!r) return;
-  modal(dlg({ title: `Annuler le reçu ${esc(r.number)}`, id: "cancel-form",
+  if (r.status !== "valide") return toast("Ce reçu est déjà annulé.", "err");
+  modal(dlg({ title: `${fix ? "Corriger" : "Annuler"} le reçu ${esc(r.number)}`, sub: fix ? "Un reçu encaissé ne se modifie jamais directement : il est annulé (avec motif), puis un nouveau reçu correct est saisi à sa place." : "", id: "cancel-form",
     body: `<div class="kv"><div><span>Famille</span><b>${esc(r.family_code + " · " + r.family_nom)}</b></div><div><span>Montant</span><b class="mono">${F(r.total)} FCFA</b></div><div><span>Encaissé par</span><b>${esc(r.created_by_name)}</b><div class="meta">le ${fmtDate(r.date)}</div></div></div>
-    <div class="banner">${icon("alert")}<span>Le reçu restera visible, barré. L'annulation sera inscrite dans l'audit à votre nom et les mois concernés redeviendront impayés.</span></div>
-    <div class="field"><label for="c-reason">Motif de l'annulation <em>*</em></label><textarea id="c-reason" name="reason" rows="3" required minlength="5" placeholder="ex. Erreur de famille, montant saisi deux fois…"></textarea></div>`,
-    foot: `<button type="button" class="btn" data-act="close">Retour</button><button class="btn danger" type="submit">Confirmer l'annulation</button>` }));
-  $("cancel-form").dataset.id = id;
+    <div class="card"><div class="scroller"><table class="list"><thead><tr><th>Élève</th><th>Objet</th><th class="num">Montant</th></tr></thead><tbody>${r.payment_lines.map((l) => `<tr><td>${esc(l.student_nom)}</td><td>${l.kind === "inscription" ? "Inscription" : esc(mLabel(l.month))}</td><td class="num">${F(l.amount)}</td></tr>`).join("")}</tbody></table></div></div>
+    <div class="banner">${icon("alert")}<span>${fix ? "Étape 1 : ce reçu sera annulé (il reste visible, barré, dans l'audit à votre nom). Étape 2 : le formulaire d'encaissement s'ouvre aussitôt, pré-rempli avec les mêmes montants, pour que vous corrigiez l'élève, le mois ou le montant." : "Le reçu restera visible, barré. L'annulation sera inscrite dans l'audit à votre nom et les mois concernés redeviendront impayés."}</span></div>
+    <div class="field"><label for="c-reason">Motif de l'annulation <em>*</em></label><textarea id="c-reason" name="reason" rows="3" required minlength="5" placeholder="ex. Erreur de mois, mauvais élève, montant saisi deux fois…"></textarea></div>`,
+    foot: `<button type="button" class="btn" data-act="close">Retour</button><button class="btn ${fix ? "primary" : "danger"}" type="submit">${fix ? "Annuler et ressaisir" : "Confirmer l'annulation"}</button>` }));
+  $("cancel-form").dataset.id = id; if (fix) $("cancel-form").dataset.fix = "1";
 }
 async function saveCancel(form) {
   const reason = (new FormData(form).get("reason") || "").trim();
   if (reason.length < 5) return formErr("Indiquez un motif d'au moins 5 caractères.");
-  const ok = await run(async () => { const { error } = await sb.rpc("cancel_receipt", { p_receipt: form.dataset.id, p_reason: reason }); if (error) throw error; }, "Reçu annulé");
-  if (ok) { closeModal(); S.auditLoaded = false; loadSchoolData(); }
+  const btn = form.querySelector("[type=submit]"); if (btn) btn.disabled = true;
+  const r = S.receipts.find((x) => x.id === form.dataset.id), fix = form.dataset.fix === "1";
+  const ok = await run(async () => { const { error } = await sb.rpc("cancel_receipt", { p_receipt: form.dataset.id, p_reason: reason }); if (error) throw error; }, fix ? "Reçu annulé : saisissez maintenant le paiement correct" : "Reçu annulé");
+  if (!ok) { if (btn) btn.disabled = false; return; }
+  closeModal(); S.auditLoaded = false; await loadSchoolData();
+  if (fix && r) {
+    openPay(r.family_id);
+    r.payment_lines.forEach((l) => { const k = l.student_id + "|" + (l.kind === "inscription" ? "INS" : l.month); if (S.students.some((s) => s.id === l.student_id)) S.pay.vals[k] = (S.pay.vals[k] || 0) + l.amount; });
+    const set = (n, v) => { const el = document.querySelector(`#pay-form [name=${n}]`); if (el && v) el.value = v; };
+    set("date", r.date); set("mode", r.mode); set("payer", r.payer); set("note", `Remplace ${r.number}`);
+    renderPayGrid();
+  }
+}
+/* Case du registre déjà (partiellement) payée : reçus concernés + correction */
+function openCell(famId, stId, mk) {
+  const st = S.students.find((s) => s.id === stId); if (!st) return;
+  const isIns = mk === "INS", PI = paidIndex();
+  const due = isIns ? dueIns(st) : dueFor(st, mk), paid = PI.get(stId + "|" + mk) || 0, reste = Math.max(0, due - paid);
+  const rs = yearReceipts().filter((r) => r.status === "valide" && r.payment_lines.some((l) => l.student_id === stId && (isIns ? l.kind === "inscription" : l.kind !== "inscription" && l.month === mk)));
+  const what = isIns ? "Inscription" : mLabel(mk);
+  const rows = rs.map((r) => { const amt = r.payment_lines.filter((l) => l.student_id === stId && (isIns ? l.kind === "inscription" : l.month === mk)).reduce((a, l) => a + l.amount, 0);
+    return `<tr><td class="rt-title"><b class="mono">${esc(r.number)}</b><span class="sub">${fmtDate(r.date)} · ${esc(r.created_by_name)}</span></td><td data-label="Pour ce mois" class="num">${F(amt)}</td><td data-label="Total du reçu" class="num">${F(r.total)}</td>
+    <td class="actions-cell" data-label=""><div class="row"><button class="btn sm" data-act="receipt" data-id="${r.id}">Voir</button><button class="btn sm primary" data-act="fix-receipt" data-id="${r.id}">Corriger</button></div></td></tr>`; }).join("");
+  modal(dlg({ title: `${esc(st.nom)} · ${esc(what)}`, sub: `Dû ${F(due)} · payé ${F(paid)} · reste ${F(reste)} FCFA`, tag: "div", size: "",
+    body: `${rs.length ? `<div class="card"><div class="scroller"><table class="list rt"><thead><tr><th>Reçu</th><th class="num">Pour ce mois</th><th class="num">Total du reçu</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>` : ""}
+    <div class="banner info">${icon("info")}<span>Erreur d'élève, de mois ou de montant ? Touchez <b>Corriger</b> : le reçu est annulé avec un motif, puis le formulaire d'encaissement s'ouvre pré-rempli pour ressaisir le bon paiement.</span></div>`,
+    foot: `${reste > 0 ? `<button class="btn" data-act="pay" data-fam="${famId}" data-st="${stId}" data-m="${mk}">${icon("plus", "sm")}Encaisser le reste</button>` : ""}<button class="btn primary" data-act="close">Fermer</button>` }));
 }
 
 /* Compte */
@@ -1309,6 +1336,8 @@ document.addEventListener("click", async (e) => {
   if (a === "clear-pv") { S.pay.vals = {}; return renderPayGrid(); }
   if (a === "receipt") return openReceipt(id);
   if (a === "cancel-receipt") return openCancel(id);
+  if (a === "fix-receipt") return openCancel(id, true);
+  if (a === "cell") { if (!school()) return; return openCell(t.dataset.fam, t.dataset.st, t.dataset.m); }
   if (a === "export-tableau") return exportTableau();
   if (a === "export-eleves") return exportEleves();
   if (a === "export-journal") return exportJournal();
